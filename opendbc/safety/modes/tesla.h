@@ -3,15 +3,15 @@
 #include "opendbc/safety/safety_declarations.h"
 
 #define TESLA_COMMON_RX_CHECKS \
-    {.msg = {{0x2b9, 2, 8, 25U, .max_counter = 7U, .ignore_quality_flag = true}, { 0 }, { 0 }}},    // DAS_control
-    {.msg = {{0x488, 2, 4, 50U, .max_counter = 15U, .ignore_quality_flag = true}, { 0 }, { 0 }}},   // DAS_steeringControl
-    {.msg = {{0x257, 0, 8, 50U, .max_counter = 15U, .ignore_quality_flag = true}, { 0 }, { 0 }}},   // DI_speed (speed in kph)
-    {.msg = {{0x155, 0, 8, 50U, .max_counter = 15U}, { 0 }, { 0 }}},                                // ESP_B (2nd speed in kph)
-    {.msg = {{0x370, 0, 8, 100U, .max_counter = 15U, .ignore_quality_flag = true}, { 0 }, { 0 }}},  // EPAS3S_sysStatus (steering angle)
-    {.msg = {{0x118, 0, 8, 100U, .max_counter = 15U, .ignore_quality_flag = true}, { 0 }, { 0 }}},  // DI_systemStatus (gas pedal)
-    {.msg = {{0x145, 0, 8, 50U, .max_counter = 15U}, { 0 }, { 0 }}},                                // ESP_status (brakes)
-    {.msg = {{0x286, 0, 8, 10U, .max_counter = 15U, .ignore_quality_flag = true}, { 0 }, { 0 }}},   // DI_state (acc state)
-    {.msg = {{0x311, 0, 7, 10U, .max_counter = 15U, .ignore_quality_flag = true}, { 0 }, { 0 }}},   // UI_warning (blinkers, buckle switch & doors)
+  { .msg = {{0x2b9, 2, 8, 25U,  .max_counter = 7U,  .ignore_quality_flag = true}, {0}, {0}} },  /* DAS_control */ \
+  { .msg = {{0x488, 2, 4, 50U,  .max_counter = 15U, .ignore_quality_flag = true}, {0}, {0}} },  /* DAS_steeringControl */ \
+  { .msg = {{0x257, 0, 8, 50U,  .max_counter = 15U, .ignore_quality_flag = true}, {0}, {0}} },  /* DI_speed */ \
+  { .msg = {{0x155, 0, 8, 50U,  .max_counter = 15U},                              {0}, {0}} },  /* ESP_B */ \
+  { .msg = {{0x370, 0, 8, 100U, .max_counter = 15U, .ignore_quality_flag = true}, {0}, {0}} },  /* EPAS3S_sysStatus */ \
+  { .msg = {{0x118, 0, 8, 100U, .max_counter = 15U, .ignore_quality_flag = true}, {0}, {0}} },  /* DI_systemStatus */ \
+  { .msg = {{0x145, 0, 8, 50U,  .max_counter = 15U},                              {0}, {0}} },  /* ESP_status */ \
+  { .msg = {{0x286, 0, 8, 10U,  .max_counter = 16U, .ignore_quality_flag = true}, {0}, {0}} },  /* DI_state */ \
+  { .msg = {{0x311, 0, 7, 10U,  .max_counter = 15U, .ignore_quality_flag = true}, {0}, {0}} },  /* UI_warning */
 
 #define TESLA_VEHICLE_BUS_ADDR_CHECK \
   {.msg = {{0x3DF, 1, 8, 2U, .ignore_checksum = true, .ignore_counter = true, .ignore_quality_flag = true}, { 0 }, { 0 }}},    /* UI_status2 */ \
@@ -179,7 +179,9 @@ static void tesla_rx_hook(const CANPacket_t *msg) {
       vehicle_moving = cruise_state != 3; // STANDSTILL
       pcm_cruise_check(cruise_engaged);
     }
-      if (msg->bus == 1U) {
+  }
+
+  if (msg->bus == 1U) {
     if (msg->addr == 0x3DFU) {
       mads_button_press = (msg->data[3] == 3U) ? MADS_BUTTON_PRESSED : MADS_BUTTON_NOT_PRESSED;
     }
@@ -208,7 +210,6 @@ static void tesla_rx_hook(const CANPacket_t *msg) {
     }
   }
 }
-
 
 static bool tesla_tx_hook(const CANPacket_t *msg) {
   const AngleSteeringLimits TESLA_STEERING_LIMITS = {
