@@ -23,6 +23,7 @@ class CarController(CarControllerBase, MadsCarController):
     self.apply_angle_last = 0
     self.packer = CANPacker(dbc_names[Bus.party])
     self.tesla_can = TeslaCAN(self.packer)
+    self.filtered_steering_angle = 0
 
     # Vehicle model used for lateral limiting
     self.VM = VehicleModel(get_safety_CP())
@@ -37,9 +38,15 @@ class CarController(CarControllerBase, MadsCarController):
     # Canceling is done on rising edge and is handled generically with CC.cruiseControl.cancel
     lat_active = CC.latActive and CS.hands_on_level < 3
 
+    SMOOTHING_ALPHA = 0.2  # 0 < alpha <= 1, lower is smoother
+    self.filtered_steering_angle = (
+      SMOOTHING_ALPHA * actuators.steeringAngleDeg +
+      (1 - SMOOTHING_ALPHA) * self.filtered_steering_angle
+    )
+
     if self.frame % 2 == 0:
       # Angular rate limit based on speed
-      self.apply_angle_last = apply_steer_angle_limits_vm(actuators.steeringAngleDeg, self.apply_angle_last, CS.out.vEgoRaw, CS.out.steeringAngleDeg,
+      self.apply_angle_last = apply_steer_angle_limits_vm(self.filtered_steering_angle, self.apply_angle_last, CS.out.vEgoRaw, CS.out.steeringAngleDeg,
                                                           lat_active, CarControllerParams, self.VM)
 
       can_sends.append(self.tesla_can.create_steering_control(self.apply_angle_last, lat_active, self.mads.control_type))
